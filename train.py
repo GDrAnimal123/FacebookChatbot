@@ -15,12 +15,12 @@ import create_data
 start_word = 'ssss'
 end_word = 'eeee'
 num_words = 10000
-embedding_size = 32
+embedding_size = 128
 hidden_size = 512
 
 # Variables for training
 epoch = 30
-batch_size = 64
+batch_size = 128
 lr = 1e-3
 
 
@@ -62,47 +62,53 @@ lr = 1e-3
 
 
 if __name__ == '__main__':
-    LIMIT = 10_000
+    LIMIT = 1_000_000
     THRESHOLD_SCORE = 5
-    # Step 1: Get Conversation between A n B data.
-    x, y = create_data.load_rdany_data("data/rdany_conversations_2016-03-01.csv", start_word, end_word)
-    # x, y = create_data.load_reddit_data("data/2015-05.db", start_word, end_word, threshold_score=THRESHOLD_SCORE, limit=LIMIT)
 
-    # Step 2: Build Tokenizer for A and B respectively
-    x_tokenizer = TokenizerWrap(x, padding="pre", reverse=True, num_words=num_words, max_tokens=None)
-    y_tokenizer = TokenizerWrap(y, padding="post", reverse=False, num_words=num_words, max_tokens=None)
+    # Optional: Load existing tokenizers
+    # @@ Change to False if you want to create and save your tokenizers
+    is_tokenizer_exist = False
+    if is_tokenizer_exist:
+        # Load existing tokenizer.
+        print("Loading tokenizers...")
+        x_tokenizer = create_data.deserialize("data/x_tokenizer.p")
+        y_tokenizer = create_data.deserialize("data/y_tokenizer.p")
+    else:
+        print("Creating new tokenizers...")
+        # Step 1: Get Conversation between A n B data.
+        # x, y = create_data.load_rdany_data("data/rdany_conversations_2016-03-01.csv", start_word, end_word)
+        x, y = create_data.load_reddit_data("data/2015-05.db", start_word, end_word, threshold_score=THRESHOLD_SCORE, limit=LIMIT)
 
-    # Optional: Save these tokenizer for further inference step
-    # @@ Change to False if we already serialize the files
-    # Serialize our tokenizers for inference step
-    is_keeping_tokenizer = True
-    if is_keeping_tokenizer:
+        # Step 2: Build Tokenizer for A and B respectively
+        x_tokenizer = TokenizerWrap(x, padding="pre", reverse=True, num_words=num_words, max_tokens=None)
+        y_tokenizer = TokenizerWrap(y, padding="post", reverse=False, num_words=num_words, max_tokens=None)
+
         create_data.serialize(x_tokenizer, "data/x_tokenizer.p")
         create_data.serialize(y_tokenizer, "data/y_tokenizer.p")
 
-    x_train = x_tokenizer.tokens_padded
-    y_train = y_tokenizer.tokens_padded
+    # x_train = x_tokenizer.tokens_padded
+    # y_train = y_tokenizer.tokens_padded
 
-    encoder_input_data = x_train
-    decoder_input_data = y_train[:, :-1]
-    decoder_output_data = np.expand_dims(y_train[:, 1:], -1)
+    # encoder_input_data = x_train
+    # decoder_input_data = y_train[:, :-1]
+    # decoder_output_data = np.expand_dims(y_train[:, 1:], -1)
 
-    x_data = \
-        {
-            'encoder_input': encoder_input_data,
-            'decoder_input': decoder_input_data
-        }
-    y_data = \
-        {
-            'decoder_output': decoder_output_data
-        }
+    # x_data = \
+    #     {
+    #         'encoder_input': encoder_input_data,
+    #         'decoder_input': decoder_input_data
+    #     }
+    # y_data = \
+    #     {
+    #         'decoder_output': decoder_output_data
+    #     }
 
-    model_train, _, _ = define_nmt(num_words, embedding_size, hidden_size)
-    optimizer = RMSprop(lr=lr)
-    model_train.compile(optimizer=optimizer,
-                        loss="sparse_categorical_crossentropy")
+    # model_train, _, _ = define_nmt(num_words, embedding_size, hidden_size)
+    # optimizer = RMSprop(lr=lr)
+    # model_train.compile(optimizer=optimizer,
+    #                     loss="sparse_categorical_crossentropy")
 
-    checkpoint_name = 'model/rdany_emb{}_h{}_lr{}_'.format(embedding_size, hidden_size, lr)
+    # checkpoint_name = 'model/reddit_emb{}_h{}_lr{}_'.format(embedding_size, hidden_size, lr)
 
     # callback_checkpoint = ModelCheckpoint(filepath=checkpoint_name + 'epoch{epoch:02d}-loss{val_loss:.2f}.h5',
     #                                       monitor='val_loss',
@@ -112,18 +118,18 @@ if __name__ == '__main__':
     #                                       period=5)
     # callback_early_stopping = EarlyStopping(monitor='val_loss',
     #                                         patience=3, verbose=1)
-    callback_tensorboard = TensorBoard(log_dir='./logs/reddit/',
-                                       histogram_freq=0,
-                                       write_graph=False)
+    # callback_tensorboard = TensorBoard(log_dir='./logs/reddit/',
+    #                                    histogram_freq=0,
+    #                                    write_graph=False)
     # callbacks = [callback_early_stopping,
     #              callback_checkpoint,
     #              callback_tensorboard]
-    model_train.fit(x=x_data,
-                    y=y_data,
-                    batch_size=batch_size,
-                    epochs=epoch,
-                    # callbacks=callbacks,
-                    validation_split=0.1,
-                    )
-    # Show predict every epoch
-    model_train.save_weights('model/rdany_weight.h5')
+    # model_train.fit(x=x_data,
+    #                 y=y_data,
+    #                 batch_size=batch_size,
+    #                 epochs=epoch,
+    #                 callbacks=callbacks,
+    #                 validation_split=0.1,
+    #                 )
+    # # Show predict every epoch
+    # # model_train.save_weights('model/rdany_weight.h5')
