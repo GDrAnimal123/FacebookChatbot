@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     # Optional: Load existing tokenizers
     # @@ Change to False if you want to create and save your tokenizers
-    is_tokenizer_exist = False
+    is_tokenizer_exist = True
     if is_tokenizer_exist:
         # Load existing tokenizer.
         print("Loading tokenizers...")
@@ -86,50 +86,50 @@ if __name__ == '__main__':
         create_data.serialize(x_tokenizer, "data/x_tokenizer.p")
         create_data.serialize(y_tokenizer, "data/y_tokenizer.p")
 
-    # x_train = x_tokenizer.tokens_padded
-    # y_train = y_tokenizer.tokens_padded
+    x_train = x_tokenizer.tokens_padded
+    y_train = y_tokenizer.tokens_padded
 
-    # encoder_input_data = x_train
-    # decoder_input_data = y_train[:, :-1]
-    # decoder_output_data = np.expand_dims(y_train[:, 1:], -1)
+    encoder_input_data = x_train
+    decoder_input_data = y_train[:, :-1]
+    decoder_output_data = np.expand_dims(y_train[:, 1:], -1)
 
-    # x_data = \
-    #     {
-    #         'encoder_input': encoder_input_data,
-    #         'decoder_input': decoder_input_data
-    #     }
-    # y_data = \
-    #     {
-    #         'decoder_output': decoder_output_data
-    #     }
+    x_data = \
+        {
+            'encoder_input': encoder_input_data,
+            'decoder_input': decoder_input_data
+        }
+    y_data = \
+        {
+            'decoder_output': decoder_output_data
+        }
 
-    # model_train, _, _ = define_nmt(num_words, embedding_size, hidden_size)
-    # optimizer = RMSprop(lr=lr)
-    # model_train.compile(optimizer=optimizer,
-    #                     loss="sparse_categorical_crossentropy")
+    model_train, _, _ = define_nmt(num_words, embedding_size, hidden_size)
+    optimizer = RMSprop(lr=lr)
+    model_train.compile(optimizer=optimizer,
+                        loss="sparse_categorical_crossentropy")
 
-    # checkpoint_name = 'model/reddit_emb{}_h{}_lr{}_'.format(embedding_size, hidden_size, lr)
+    checkpoint_name = 'model/reddit_emb{}_h{}_lr{}_'.format(embedding_size, hidden_size, lr)
 
-    # callback_checkpoint = ModelCheckpoint(filepath=checkpoint_name + 'epoch{epoch:02d}-loss{val_loss:.2f}.h5',
-    #                                       monitor='val_loss',
-    #                                       verbose=1,
-    #                                       save_weights_only=True,
-    #                                       save_best_only=True,
-    #                                       period=5)
-    # callback_early_stopping = EarlyStopping(monitor='val_loss',
-    #                                         patience=3, verbose=1)
-    # callback_tensorboard = TensorBoard(log_dir='./logs/reddit/',
-    #                                    histogram_freq=0,
-    #                                    write_graph=False)
-    # callbacks = [callback_early_stopping,
-    #              callback_checkpoint,
-    #              callback_tensorboard]
-    # model_train.fit(x=x_data,
-    #                 y=y_data,
-    #                 batch_size=batch_size,
-    #                 epochs=epoch,
-    #                 callbacks=callbacks,
-    #                 validation_split=0.1,
-    #                 )
-    # # Show predict every epoch
-    # # model_train.save_weights('model/rdany_weight.h5')
+    callback_checkpoint = ModelCheckpoint(filepath=checkpoint_name + 'epoch{epoch:02d}-loss{val_loss:.2f}.h5',
+                                          monitor='val_loss',
+                                          verbose=1,
+                                          save_weights_only=True,
+                                          save_best_only=True,
+                                          period=5)
+    callback_early_stopping = EarlyStopping(monitor='val_loss',
+                                            patience=3, verbose=1)
+    callback_tensorboard = TensorBoard(log_dir='./logs/reddit/',
+                                       histogram_freq=0,
+                                       write_graph=False)
+    callbacks = [callback_early_stopping,
+                 callback_checkpoint,
+                 callback_tensorboard]
+    model_train.fit(x=x_data,
+                    y=y_data,
+                    batch_size=batch_size,
+                    epochs=epoch,
+                    callbacks=callbacks,
+                    validation_split=0.1,
+                    )
+    # Show predict every epoch
+    # model_train.save_weights('model/rdany_weight.h5')
